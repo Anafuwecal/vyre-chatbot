@@ -6,22 +6,26 @@ import express from 'express';
 import cors from 'cors';
 import { app as langGraphApp } from './agents/graph.js';
 import { synthesizerStreamNode } from './agents/synthesizer.agent.js';
-import { HumanMessage } from '@langchain/core/messages';
+import { HumanMessage, BaseMessage } from '@langchain/core/messages';
 import { initializePinecone } from './tools/index.js';
 import { config } from './config/env.js';
 import { v4 as uuidv4 } from 'uuid';
 
+// ✅ ADD: Define the state type
+interface GraphState {
+  messages: BaseMessage[];
+  next?: string;
+}
+
 const app = express();
 const PORT = process.env.PORT || config.server.port || 3000;
 
-// Increase timeout limits
 app.use(express.json({ limit: '10mb' }));
 app.use(cors({ 
   origin: config.server.frontendUrl,
   credentials: true
 }));
 
-// Set longer timeouts
 const server = app.listen(PORT, () => {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(`🚀 VYRE Chatbot API`);
@@ -31,14 +35,12 @@ const server = app.listen(PORT, () => {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 });
 
-// Increase server timeout to 5 minutes
-server.timeout = 300000; // 5 minutes
-server.keepAliveTimeout = 65000; // 65 seconds
-server.headersTimeout = 66000; // 66 seconds
+server.timeout = 300000;
+server.keepAliveTimeout = 65000;
+server.headersTimeout = 66000;
 
 const sessions = new Map<string, string>();
 
-// Initialize services
 console.log('🔧 Initializing services...');
 await initializePinecone();
 console.log('✅ Pinecone & Tools initialized\n');
@@ -58,7 +60,6 @@ app.post('/api/session', (req, res) => {
   res.json({ sessionId });
 });
 
-// IMPROVED STREAMING ENDPOINT WITH ERROR HANDLING
 app.post('/api/chat/stream', async (req, res) => {
   const startTime = Date.now();
   
@@ -73,13 +74,11 @@ app.post('/api/chat/stream', async (req, res) => {
       return res.status(400).json({ error: 'Session ID required' });
     }
 
-    // Set SSE headers with keep-alive
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
+    res.setHeader('X-Accel-Buffering', 'no');
     
-    // Send initial connection confirmation
     res.write(': connected\n\n');
 
     const messages = [new HumanMessage(message)];
@@ -88,19 +87,18 @@ app.post('/api/chat/stream', async (req, res) => {
       configurable: {
         thread_id: sessionId,
       },
-      // Add timeout configuration
-      timeout: 120000, // 2 minutes for graph execution
+      timeout: 120000,
     };
 
     console.log('🤖 Invoking LangGraph...');
 
-    // Execute graph with timeout protection
     const graphPromise = langGraphApp.invoke({ messages }, configGraph);
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Graph execution timeout')), 120000)
     );
 
-    const state = await Promise.race([graphPromise, timeoutPromise]);
+    // ✅ FIX: Properly type the state
+    const state = await Promise.race([graphPromise, timeoutPromise]) as GraphState;
 
     console.log('✅ Graph execution complete');
     console.log('📊 Messages in state:', state.messages?.length || 0);
@@ -113,7 +111,10 @@ app.post('/api/chat/stream', async (req, res) => {
       return;
     }
 
-    const toolMessages = state.messages?.filter((m: any) => m.name || m.tool_calls);
+    const toolMessages = state.messages?.filter((m: BaseMessage) => 
+      'name' in m || 'tool_calls' in m
+    );
+    
     if (toolMessages && toolMessages.length > 0) {
       console.log('🛠️  Tools used:', toolMessages.length);
     }
@@ -122,27 +123,21 @@ app.post('/api/chat/stream', async (req, res) => {
 
     let chunkCount = 0;
     let totalContent = '';
-    let lastSendTime = Date.now();
 
     try {
-      // Keep-alive ping interval
       const keepAliveInterval = setInterval(() => {
         res.write(': ping\n\n');
-      }, 15000); // Every 15 seconds
+      }, 15000);
 
       for await (const chunk of synthesizerStreamNode(state)) {
         if (chunk && chunk.toString().trim()) {
           chunkCount++;
           totalContent += chunk;
           
-          // Send the chunk
           res.write(`data: ${JSON.stringify({ content: chunk.toString() })}\n\n`);
-          
-          lastSendTime = Date.now();
         }
         
-        // Safety: Break if streaming takes too long
-        if (Date.now() - startTime > 180000) { // 3 minutes max
+        if (Date.now() - startTime > 180000) {
           console.warn('⚠️  Stream timeout, breaking...');
           break;
         }
@@ -156,19 +151,16 @@ app.post('/api/chat/stream', async (req, res) => {
 
     console.log(`✅ Streamed ${chunkCount} chunks (${totalContent.length} chars)`);
     
-    // If nothing was streamed, send fallback
     if (chunkCount === 0 || totalContent.length === 0) {
       console.warn('⚠️  No content streamed, sending fallback...');
       const lastMsg = state.messages[state.messages.length - 1];
       
-      if (lastMsg && lastMsg.content) {
+      if (lastMsg && 'content' in lastMsg) {
         const fallbackContent = typeof lastMsg.content === 'string' 
           ? lastMsg.content 
           : JSON.stringify(lastMsg.content);
         
         console.log('📤 Sending fallback, length:', fallbackContent.length);
-        
-        // Send as single chunk
         res.write(`data: ${JSON.stringify({ content: fallbackContent })}\n\n`);
       } else {
         res.write(`data: ${JSON.stringify({ error: 'No response content available' })}\n\n`);
@@ -195,7 +187,7 @@ app.post('/api/chat/stream', async (req, res) => {
     }
   }
 });
-// Add this for debugging
+
 app.post('/api/debug-stream', async (req, res) => {
   const { message } = req.body;
   
@@ -203,7 +195,6 @@ app.post('/api/debug-stream', async (req, res) => {
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
 
-  // Send test chunks
   for (let i = 0; i < 10; i++) {
     res.write(`data: ${JSON.stringify({ content: `Chunk ${i + 1} ` })}\n\n`);
     await new Promise(resolve => setTimeout(resolve, 100));

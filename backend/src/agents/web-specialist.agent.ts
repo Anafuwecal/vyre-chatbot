@@ -1,7 +1,7 @@
 import { ChatGroq } from '@langchain/groq';
 import { AgentStateType } from './state.js';
 import { websiteSearchTool } from '../tools/index.js';
-import { AIMessage } from '@langchain/core/messages';
+import { ToolMessage } from '@langchain/core/messages';
 import { config } from '../config/env.js';
 
 const model = new ChatGroq({
@@ -23,15 +23,23 @@ export async function webSpecialistNode(state: AgentStateType) {
     console.log('🔧 Calling tool:', toolCall.name);
     console.log('📝 Tool args:', toolCall.args);
     
-    const toolResult = await websiteSearchTool.invoke(toolCall.args);
+    // ✅ FIX: Properly invoke with structured args
+    const toolResult = await websiteSearchTool.invoke({
+      query: toolCall.args.query,
+      url: toolCall.args.url || 'https://vyre.africa',
+    });
 
-    console.log('✅ Tool result length:', toolResult.length);
+    // ✅ FIX: Ensure toolResult is treated as string
+    const resultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
+    
+    console.log('✅ Tool result length:', resultString.length);
 
     return {
       messages: [
         response,
-        new AIMessage({
-          content: toolResult,
+        new ToolMessage({
+          content: resultString,
+          tool_call_id: toolCall.id || '',
           name: 'search_vyre_website',
         }),
       ],

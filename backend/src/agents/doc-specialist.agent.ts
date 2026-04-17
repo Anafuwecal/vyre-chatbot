@@ -1,7 +1,7 @@
 import { ChatGroq } from '@langchain/groq';
 import { AgentStateType } from './state.js';
 import { pineconeSearchTool } from '../tools/index.js';
-import { AIMessage } from '@langchain/core/messages';
+import { AIMessage, ToolMessage } from '@langchain/core/messages';
 import { config } from '../config/env.js';
 
 const model = new ChatGroq({
@@ -17,13 +17,20 @@ export async function docSpecialistNode(state: AgentStateType) {
 
   if (response.tool_calls && response.tool_calls.length > 0) {
     const toolCall = response.tool_calls[0];
-    const toolResult = await pineconeSearchTool.invoke(toolCall.args);
+    
+    // ✅ FIX: Properly invoke the tool with correct input structure
+    const toolResult = await pineconeSearchTool.invoke({
+      query: toolCall.args.query,
+      k: toolCall.args.k || 5,
+    });
 
+    // ✅ FIX: Use ToolMessage instead of AIMessage for tool results
     return {
       messages: [
         response,
-        new AIMessage({
-          content: toolResult,
+        new ToolMessage({
+          content: typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult),
+          tool_call_id: toolCall.id || '',
           name: 'search_documentation',
         }),
       ],
