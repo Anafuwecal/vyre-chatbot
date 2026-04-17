@@ -8,12 +8,12 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "setup": "tsx src/setup-pinecone.ts",
     "ingest": "tsx src/ingest.ts",
-    "ingest-simple": "tsx src/ingest-simple.ts",
-    "test-env": "tsx src/test-env.ts",
-    "test-groq": "tsx src/test-groq.ts",
-    "list-indexes": "tsx src/list-indexes.ts"
+    "postinstall": "npm run build"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
   },
   "keywords": [],
   "author": "",

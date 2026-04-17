@@ -12,7 +12,7 @@ import { config } from './config/env.js';
 import { v4 as uuidv4 } from 'uuid';
 
 const app = express();
-const PORT = config.server.port;
+const PORT = process.env.PORT || config.server.port || 3000;
 
 // Increase timeout limits
 app.use(express.json({ limit: '10mb' }));
