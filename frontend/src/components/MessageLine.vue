@@ -65,7 +65,7 @@ const formatContent = (text: string) => {
     </div>
     <div class="max-w-[80%]">
       <div class="flex items-center gap-2 mb-1">
-        <span class="text-sm font-semibold text-gray-700">VYRE Assistant</span>
+        <span class="text-sm font-semibold text-gray-700">Vyre</span>
         <span class="text-xs text-gray-500">{{ formatTime(message.timestamp) }}</span>
       </div>
       <div class="bg-white border-2 border-black p-3 rounded-2xl rounded-tl-sm">
