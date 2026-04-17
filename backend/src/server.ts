@@ -11,10 +11,10 @@ import { initializePinecone } from './tools/index.js';
 import { config } from './config/env.js';
 import { v4 as uuidv4 } from 'uuid';
 
-// ✅ ADD: Define the state type
+// ✅ FIX: Match the exact state type expected by LangGraph
 interface GraphState {
   messages: BaseMessage[];
-  next?: string;
+  next: string; // ✅ Made required instead of optional
 }
 
 const app = express();
@@ -97,10 +97,16 @@ app.post('/api/chat/stream', async (req, res) => {
       setTimeout(() => reject(new Error('Graph execution timeout')), 120000)
     );
 
-    // ✅ FIX: Properly type the state
-    const state = await Promise.race([graphPromise, timeoutPromise]) as GraphState;
+    const rawState = await Promise.race([graphPromise, timeoutPromise]);
 
     console.log('✅ Graph execution complete');
+    
+    // ✅ FIX: Safely cast and provide default for 'next'
+    const state: GraphState = {
+      messages: (rawState as any).messages || [],
+      next: (rawState as any).next || 'synthesize' // ✅ Provide default
+    };
+
     console.log('📊 Messages in state:', state.messages?.length || 0);
 
     if (!state.messages || state.messages.length === 0) {
@@ -129,6 +135,7 @@ app.post('/api/chat/stream', async (req, res) => {
         res.write(': ping\n\n');
       }, 15000);
 
+      // ✅ FIX: Now state has the required 'next' property
       for await (const chunk of synthesizerStreamNode(state)) {
         if (chunk && chunk.toString().trim()) {
           chunkCount++;
@@ -189,8 +196,6 @@ app.post('/api/chat/stream', async (req, res) => {
 });
 
 app.post('/api/debug-stream', async (req, res) => {
-  const { message } = req.body;
-  
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
