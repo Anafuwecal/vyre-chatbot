@@ -68,7 +68,7 @@ watch(
     ]"
   >
     <!-- Header -->
-    <div class="flex items-center justify-between p-4 border-b-2 border-black bg-white rounded-t-[10px]">
+     <div class="flex items-center justify-between p-4 border-b-2 border-black bg-white rounded-t-[10px]">
       <div class="flex items-center gap-3">
         <div
           class="w-10 h-10 rounded-[15px] text-black bg-[#43d8b8] border-[2px] border-black flex items-center justify-center font-bold"
@@ -77,9 +77,25 @@ watch(
         </div>
         <div>
           <h3 class="font-bold text-black tracking-tight">VYRE ASSISTANT</h3>
-          <p class="text-xs text-gray-600">Always here to help</p>
+          <div class="flex items-center gap-3">
+            <p class="text-xs text-gray-600">Always here to help</p>
+            
+            <!-- ✅ FIXED: Moved connection status here as sibling, not nested -->
+            <div class="flex items-center gap-1">
+              <div 
+                :class="[
+                  'w-2 h-2 rounded-full',
+                  chatStore.isLoading ? 'bg-yellow-500 animate-pulse' : 'bg-green-500'
+                ]"
+              ></div>
+              <span class="text-xs text-gray-500">
+                {{ chatStore.isLoading ? 'Thinking...' : 'Ready' }}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
+
       <div class="flex items-center gap-2">
         <button
           @click="chatStore.clearChat"

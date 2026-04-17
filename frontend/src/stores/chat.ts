@@ -37,61 +37,163 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   const sendMessage = async (content: string) => {
-    if (!content.trim() || isLoading.value) return
-    if (!sessionId.value) await initSession()
+  if (!content.trim() || isLoading.value) {
+    console.log('⚠️ Skipping send - empty or loading')
+    return
+  }
 
-    addMessage('user', content)
-    isLoading.value = true
-    isStreaming.value = true
-    currentStreamingMessage.value = ''
+  if (!sessionId.value) {
+    console.log('⚠️ No session, creating one...')
+    await initSession()
+  }
 
-    try {
-      const response = await fetch(`${API_URL}/api/chat/stream`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: content, sessionId: sessionId.value })
-      })
+  console.log('📤 Sending message:', content)
+  console.log('🔑 Using session:', sessionId.value)
 
-      const reader = response.body?.getReader()
-      const decoder = new TextDecoder()
-      if (!reader) throw new Error('No reader')
+  addMessage('user', content)
+  isLoading.value = true
+  isStreaming.value = true
+  currentStreamingMessage.value = ''
 
-      let buffer = ''
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
+  let abortController = new AbortController()
+  let timeoutId: ReturnType<typeof setTimeout>
+  try {
+    // Set overall timeout (3 minutes)
+    timeoutId = setTimeout(() => {
+      console.warn('⏱️  Request timeout, aborting...')
+      abortController.abort()
+    }, 180000)
 
-        buffer += decoder.decode(value, { stream: true })
-        const lines = buffer.split('\n')
-        buffer = lines.pop() || ''
+    const response = await fetch(`${API_URL}/api/chat/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: content,
+        sessionId: sessionId.value,
+      }),
+      signal: abortController.signal,
+    })
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6).trim()
-            if (data === '[DONE]') break
+    console.log('📡 Response status:', response.status)
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`)
+    }
+
+    if (!response.body) {
+      throw new Error('No response body')
+    }
+
+    const reader = response.body.getReader()
+    const decoder = new TextDecoder()
+
+    let buffer = ''
+    let chunks = 0
+    let lastChunkTime = Date.now()
+
+    while (true) {
+      // Read with timeout
+      const readPromise = reader.read()
+      const timeoutPromise = new Promise<{ done: true; value?: undefined }>((resolve) =>
+        setTimeout(() => {
+          console.warn('⏱️  Read timeout')
+          resolve({ done: true })
+        }, 30000) // 30 seconds per chunk
+      )
+
+      const { done, value } = await Promise.race([readPromise, timeoutPromise])
+
+      if (done) {
+        console.log('✅ Stream complete. Total chunks:', chunks)
+        break
+      }
+
+      if (!value) continue
+
+      lastChunkTime = Date.now()
+
+      buffer += decoder.decode(value, { stream: true })
+      const lines = buffer.split('\n')
+
+      buffer = lines.pop() || ''
+
+      for (const line of lines) {
+        // Skip keep-alive pings
+        if (line.startsWith(': ')) continue
+
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6).trim()
+
+          if (data === '[DONE]') {
+            console.log('✅ Received [DONE]')
+            break
+          }
+
+          if (data) {
             try {
               const parsed = JSON.parse(data)
-              if (parsed.content) currentStreamingMessage.value += parsed.content
-            } catch (e) {}
+              
+              if (parsed.content) {
+                chunks++
+                currentStreamingMessage.value += parsed.content
+              }
+              
+              if (parsed.error) {
+                console.error('❌ Stream error:', parsed.error)
+                throw new Error(parsed.error)
+              }
+            } catch (e) {
+              if (e instanceof Error && e.message.startsWith('Stream error')) {
+                throw e
+              }
+              // Skip invalid JSON
+              console.warn('⚠️  Invalid JSON, skipping:', data.substring(0, 50))
+            }
           }
         }
       }
-
-      if (currentStreamingMessage.value.trim()) {
-        addMessage('assistant', currentStreamingMessage.value)
-      } else {
-        addMessage('assistant', 'No response received.')
-      }
-      currentStreamingMessage.value = ''
-    } catch (error) {
-      console.error('Chat error:', error)
-      addMessage('assistant', 'Error occurred.')
-      currentStreamingMessage.value = ''
-    } finally {
-      isLoading.value = false
-      isStreaming.value = false
     }
+
+    // Clear timeout
+    clearTimeout(timeoutId)
+
+    // Add complete assistant message
+    if (currentStreamingMessage.value.trim()) {
+      console.log('✅ Adding assistant message, length:', currentStreamingMessage.value.length)
+      addMessage('assistant', currentStreamingMessage.value)
+    } else {
+      console.warn('⚠️ No content received from stream')
+      addMessage(
+        'assistant',
+        "I'm sorry, I didn't receive a complete response. Please try asking again."
+      )
+    }
+
+    currentStreamingMessage.value = ''
+  } catch (error: any) {
+    console.error('❌ Chat error:', error)
+
+    // Clear timeout if exists
+    if (timeoutId) clearTimeout(timeoutId)
+
+    // Provide user-friendly error messages
+    let errorMessage = 'Sorry, I encountered an error. Please try again.'
+
+    if (error.name === 'AbortError' || error.message.includes('timeout')) {
+      errorMessage = 'The request took too long. Please try a simpler question or try again.'
+    } else if (error.message.includes('Failed to fetch')) {
+      errorMessage = 'Cannot connect to the server. Please check your connection and try again.'
+    }
+
+    addMessage('assistant', errorMessage)
+    currentStreamingMessage.value = ''
+  } finally {
+    isLoading.value = false
+    isStreaming.value = false
   }
+}
 
   const clearChat = () => {
     messages.value = []

@@ -7,6 +7,10 @@ const props = defineProps<{
   message: Message
 }>()
 
+const emit = defineEmits<{
+  retry: []
+}>()
+
 const visible = ref(false)
 
 onMounted(() => {
@@ -70,6 +74,18 @@ const formatContent = (text: string) => {
       </div>
       <div class="bg-white border-2 border-black p-3 rounded-2xl rounded-tl-sm">
         <div v-html="formatContent(message.content)" class="text-sm text-gray-800 leading-relaxed" />
+      </div>
+      
+      <div 
+        v-if="message.content.includes('error')"
+        class="mt-2 ml-2"
+      >
+        <button
+          @click="emit('retry')"
+          class="text-xs text-gray-500 hover:text-[#43d8b8] underline"
+        >
+            Retry this response
+        </button>
       </div>
     </div>
   </div>
