@@ -21,9 +21,31 @@ const app = express();
 const PORT = process.env.PORT || config.server.port || 3000;
 
 app.use(express.json({ limit: '10mb' }));
-app.use(cors({ 
-  origin: config.server.frontendUrl,
-  credentials: true
+
+// ✅ Allow multiple origins for production
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000', 
+  'https://vyre-chatbot.vercel.app',  // ⚠️ REPLACE WITH YOUR VERCEL URL
+  process.env.FRONTEND_URL,
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow no origin (server-to-server, Postman)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin matches any allowed origin
+    if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
+      callback(null, true);
+    } else {
+      console.warn('⚠️ CORS blocked:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
 }));
 
 const server = app.listen(PORT, () => {
