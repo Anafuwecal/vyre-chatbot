@@ -6,11 +6,10 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "cross-env NODE_OPTIONS='--max-old-space-size=4096' tsc",
-    "start": "node dist/server.js",
-    "start:tsx": "tsx src/server.ts",
-    "ingest": "tsx src/ingest.ts",
-    "postinstall": "npm run build"
+    "build": "echo 'Using runtime TypeScript - no compilation needed'",
+    "start": "tsx src/server.ts",
+    "start:prod": "NODE_ENV=production tsx src/server.ts",
+    "ingest": "tsx src/ingest.ts"
   },
   "engines": {
     "node": ">=20.0.0",
@@ -38,7 +37,8 @@
     "pdf-parse": "^1.1.1",
     "uuid": "^11.0.5",
     "winston": "^3.17.0",
-    "zod": "^3.24.1"
+    "zod": "^3.24.1",
+    "tsx": "^4.19.2"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.35",
@@ -50,7 +50,6 @@
     "@types/uuid": "^10.0.0",
     "cross-env": "^10.1.0",
     "nodemon": "^3.1.9",
-    "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   }
 }
