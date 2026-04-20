@@ -39,16 +39,16 @@ export async function synthesizerNode(state: AgentStateType) {
 
 // IMPROVED STREAMING WITH BETTER ERROR HANDLING
 export async function* synthesizerStreamNode(state: AgentStateType) {
-  console.log('🌊 Synthesizer streaming...');
+  console.log('Synthesizer streaming...');
 
   if (!state.messages || state.messages.length === 0) {
-    console.error('❌ No messages in state');
+    console.error('No messages in state');
     yield 'Sorry, I encountered an error. Please try again.';
     return;
   }
 
   try {
-    console.log('🔄 Generating response...');
+    console.log('Generating response...');
     
     const stream = await chain.stream({
       messages: state.messages,
@@ -71,16 +71,16 @@ export async function* synthesizerStreamNode(state: AgentStateType) {
       
       // Safety timeout
       if (Date.now() - startTime > 90000) { // 90 seconds
-        console.warn('⚠️  Synthesizer timeout');
+        console.warn('Synthesizer timeout');
         break;
       }
     }
 
-    console.log(`✅ Synthesized ${chunkCount} chunks (${totalContent.length} chars)`);
+    console.log(`Synthesized ${chunkCount} chunks (${totalContent.length} chars)`);
 
     // If we got very little content, it might be incomplete
     if (totalContent.length < 20) {
-      console.warn('⚠️  Response seems too short, checking state...');
+      console.warn('Response seems too short, checking state...');
       
       // Try to get content from state
       const lastMessage = state.messages[state.messages.length - 1];
@@ -90,14 +90,14 @@ export async function* synthesizerStreamNode(state: AgentStateType) {
           : JSON.stringify(lastMessage.content);
         
         if (fallback.length > totalContent.length) {
-          console.log('📤 Using fallback from state');
+          console.log('Using fallback from state');
           yield '\n\n' + fallback;
         }
       }
     }
 
   } catch (error: any) {
-    console.error('❌ Synthesis error:', error.message);
+    console.error('Synthesis error:', error.message);
     
     // Try to provide a fallback response
     if (error.message.includes('timeout') || error.message.includes('ECONNRESET')) {

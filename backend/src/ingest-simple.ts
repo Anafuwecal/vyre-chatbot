@@ -302,7 +302,7 @@ Lagos, Nigeria`,
 ];
 
 async function ingestKnowledge() {
-  console.log('🚀 Starting VYRE knowledge base ingestion...\n');
+  console.log('Starting VYRE knowledge base ingestion...\n');
 
   try {
     // Validate environment variables
@@ -320,7 +320,7 @@ async function ingestKnowledge() {
     });
 
     const index = pinecone.Index(process.env.PINECONE_INDEX);
-    console.log('✅ Connected to Pinecone index:', process.env.PINECONE_INDEX);
+    console.log('Connected to Pinecone index:', process.env.PINECONE_INDEX);
     console.log('');
 
     // Convert to LangChain documents
@@ -344,7 +344,7 @@ async function ingestKnowledge() {
     });
 
     const chunks = await textSplitter.splitDocuments(documents);
-    console.log(`✅ Created ${chunks.length} searchable chunks`);
+    console.log(`Created ${chunks.length} searchable chunks`);
     console.log('');
 
     // Create FREE embeddings using HuggingFace model
@@ -382,7 +382,7 @@ async function ingestKnowledge() {
     console.log('');
   } catch (error: any) {
     console.error('');
-    console.error('❌ Ingestion failed!');
+    console.error('Ingestion failed!');
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.error('Error:', error.message);
     console.error('');

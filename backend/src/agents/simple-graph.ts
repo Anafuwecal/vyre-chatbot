@@ -19,19 +19,19 @@ const model = new ChatGroq({
 const chain = prompt.pipe(model);
 
 export async function simpleChat(messages: BaseMessage[]) {
-  console.log('🤖 Simple chat invoked with', messages.length, 'messages');
+  console.log('Simple chat invoked with', messages.length, 'messages');
   
   const response = await chain.invoke({
     messages,
   });
 
-  console.log('✅ Response received:', response.content.toString().substring(0, 100));
+  console.log('Response received:', response.content.toString().substring(0, 100));
   
   return response;
 }
 
 export async function* simpleChatStream(messages: BaseMessage[]) {
-  console.log('🌊 Simple chat stream invoked with', messages.length, 'messages');
+  console.log('Simple chat stream invoked with', messages.length, 'messages');
   
   const stream = await chain.stream({
     messages,
@@ -45,5 +45,5 @@ export async function* simpleChatStream(messages: BaseMessage[]) {
     }
   }
   
-  console.log('✅ Streamed', totalChunks, 'chunks');
+  console.log('Streamed', totalChunks, 'chunks');
 }

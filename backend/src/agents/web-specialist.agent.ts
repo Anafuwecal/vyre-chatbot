@@ -13,26 +13,26 @@ const model = new ChatGroq({
 const modelWithTools = model.bindTools([websiteSearchTool]);
 
 export async function webSpecialistNode(state: AgentStateType) {
-  console.log('🌐 Web specialist activated');
+  console.log('Web specialist activated');
   
   const response = await modelWithTools.invoke(state.messages);
 
   if (response.tool_calls && response.tool_calls.length > 0) {
     const toolCall = response.tool_calls[0];
     
-    console.log('🔧 Calling tool:', toolCall.name);
-    console.log('📝 Tool args:', toolCall.args);
+    console.log('Calling tool:', toolCall.name);
+    console.log('Tool args:', toolCall.args);
     
-    // ✅ FIX: Properly invoke with structured args
+    // FIX: Properly invoke with structured args
     const toolResult = await websiteSearchTool.invoke({
       query: toolCall.args.query,
       url: toolCall.args.url || 'https://vyre.africa',
     });
 
-    // ✅ FIX: Ensure toolResult is treated as string
+    // FIX: Ensure toolResult is treated as string
     const resultString = typeof toolResult === 'string' ? toolResult : JSON.stringify(toolResult);
     
-    console.log('✅ Tool result length:', resultString.length);
+    console.log('Tool result length:', resultString.length);
 
     return {
       messages: [

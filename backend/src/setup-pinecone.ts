@@ -22,7 +22,7 @@ async function setupPinecone() {
     );
 
     if (indexExists) {
-      console.log(`✅ Index "${indexName}" already exists!`);
+      console.log(`Index "${indexName}" already exists!`);
       console.log('');
       console.log('You can now run: npm run ingest-simple');
       console.log('');
@@ -45,7 +45,7 @@ async function setupPinecone() {
       },
     });
 
-    console.log('✅ Index created successfully!');
+    console.log('Index created successfully!');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('📊 Index Details:');
     console.log(`   • Name: ${indexName}`);
@@ -66,13 +66,13 @@ async function setupPinecone() {
     console.log('');
   } catch (error: any) {
     console.error('');
-    console.error('❌ Setup failed!');
+    console.error('Setup failed!');
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.error('Error:', error.message);
     console.error('');
 
     if (error.message.includes('already exists')) {
-      console.log('✅ Good news: The index already exists!');
+      console.log('Good news: The index already exists!');
       console.log('💡 You can proceed with: npm run ingest-simple');
       console.log('');
     } else if (error.message.includes('PINECONE_API_KEY')) {

@@ -16,7 +16,7 @@ export const scheduleStreamTool = new DynamicStructuredTool({
     // Mock scheduling logic - integrate with calendar service
     const scheduledDateTime = new Date(`${date}T${time}`);
 
-    return `✅ Stream scheduled successfully!
+    return `Stream scheduled successfully!
 
 **Stream Details:**
 - Title: ${title}
@@ -31,6 +31,6 @@ Your stream will be promoted 24 hours before going live. You'll receive a remind
 2. Promote on social media using #VYRELive
 3. Go live at your scheduled time
 
-Good luck! 🎥✨`;
+Good luck!`;
   },
 });

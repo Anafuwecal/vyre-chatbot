@@ -10,7 +10,7 @@ let vectorStore: PineconeStore | null = null;
 export async function initializePinecone() {
   if (vectorStore) return vectorStore;
 
-  console.log('🔌 Initializing Pinecone vector store...');
+  console.log('Initializing Pinecone vector store...');
   
   const pinecone = new Pinecone({
     apiKey: config.pinecone.apiKey,
@@ -27,7 +27,7 @@ export async function initializePinecone() {
     namespace: 'vyre-docs',
   });
 
-  console.log('✅ Pinecone vector store ready\n');
+  console.log('Pinecone vector store ready\n');
   return vectorStore;
 }
 
@@ -39,14 +39,14 @@ export const pineconeSearchTool = new DynamicStructuredTool({
     k: z.number().optional().default(4)
   }),
   func: async ({ query, k = 4 }) => {
-    console.log('🔍 Searching VYRE.AFRICA documentation for:', query);
+    console.log('Searching VYRE.AFRICA documentation for:', query);
 
     if (!vectorStore) {
       await initializePinecone();
     }
 
     const results = await vectorStore!.similaritySearch(query, k);
-    console.log(`📊 Found ${results.length} results`);
+    console.log(`Found ${results.length} results`);
 
     if (results.length === 0) {
       return 'No relevant information found in VYRE.AFRICA documentation.';
@@ -65,7 +65,7 @@ export const pineconeSearchTool = new DynamicStructuredTool({
       })
       .join('\n\n');
 
-    console.log('📄 Returning', cleanContent.length, 'characters');
+    console.log('Returning', cleanContent.length, 'characters');
     
     if (!cleanContent) {
       return 'No relevant VYRE.AFRICA information found for this query.';

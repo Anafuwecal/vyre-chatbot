@@ -18,13 +18,13 @@ export async function docSpecialistNode(state: AgentStateType) {
   if (response.tool_calls && response.tool_calls.length > 0) {
     const toolCall = response.tool_calls[0];
     
-    // ✅ FIX: Properly invoke the tool with correct input structure
+    // FIX: Properly invoke the tool with correct input structure
     const toolResult = await pineconeSearchTool.invoke({
       query: toolCall.args.query,
       k: toolCall.args.k || 5,
     });
 
-    // ✅ FIX: Use ToolMessage instead of AIMessage for tool results
+    // FIX: Use ToolMessage instead of AIMessage for tool results
     return {
       messages: [
         response,

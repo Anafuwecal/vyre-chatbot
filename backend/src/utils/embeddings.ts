@@ -17,22 +17,22 @@ export class TransformersEmbeddings extends Embeddings {
     super(params ?? {});
     this.modelName = params?.modelName ?? 'Xenova/all-MiniLM-L6-v2';
     
-    // ✅ Configure for server environment
+    // Configure for server environment
     env.allowLocalModels = false;
     env.useBrowserCache = false;
   }
 
   async ensurePipeline(): Promise<FeatureExtractionPipeline> {
     if (!this.pipeline) {
-      console.log('🧠 Loading embedding model (first time only)...');
+      console.log('Loading embedding model (first time only)...');
       
-      // ✅ FIX: Properly type the pipeline
+      // FIX: Properly type the pipeline
       this.pipeline = await pipeline(
         'feature-extraction', 
         this.modelName
       ) as FeatureExtractionPipeline;
       
-      console.log('✅ Embedding model loaded');
+      console.log('Embedding model loaded');
     }
     return this.pipeline;
   }
@@ -42,7 +42,7 @@ export class TransformersEmbeddings extends Embeddings {
     const embeddings: number[][] = [];
 
     for (const text of texts) {
-      // ✅ FIX: Properly handle the output
+      // FIX: Properly handle the output
       const output = await pipe(text, { 
         pooling: 'mean', 
         normalize: true 

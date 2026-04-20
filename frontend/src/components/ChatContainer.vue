@@ -80,7 +80,7 @@ watch(
           <div class="flex items-center gap-3">
             <p class="text-xs text-gray-600">Always here to help</p>
             
-            <!-- ✅ FIXED: Moved connection status here as sibling, not nested -->
+            <!-- FIXED: Moved connection status here as sibling, not nested -->
             <div class="flex items-center gap-1">
               <div 
                 :class="[

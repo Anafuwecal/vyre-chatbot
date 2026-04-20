@@ -49,12 +49,12 @@ async function loadDocumentsFromDirectory(dirPath: string): Promise<Document[]> 
     const stat = fs.statSync(filePath);
 
     if (!stat.isFile()) {
-      console.log(`  ⏭️  Skipping directory: ${file}`);
+      console.log(`  Skipping directory: ${file}`);
       continue;
     }
 
     const ext = path.extname(file).toLowerCase();
-    console.log(`  📋 Processing: ${file} (${ext})`);
+    console.log(`  Processing: ${file} (${ext}`);
 
     try {
       let docs: Document[] = [];
@@ -68,7 +68,7 @@ async function loadDocumentsFromDirectory(dirPath: string): Promise<Document[]> 
             });
             docs = await loader.load();
           } catch (pdfError: any) {
-            console.error(`     ❌ PDF Error: ${pdfError.message}`);
+            console.error(`     PDF Error: ${pdfError.message}`);
             docs = [
               new Document({
                 pageContent: `[PDF file: ${file} - content could not be extracted]`,
@@ -85,7 +85,7 @@ async function loadDocumentsFromDirectory(dirPath: string): Promise<Document[]> 
           break;
 
         default:
-          console.log(`     ⏭️  Skipping unsupported format\n`);
+          console.log(`     Skipping unsupported format\n`);
           continue;
       }
 
@@ -99,9 +99,9 @@ async function loadDocumentsFromDirectory(dirPath: string): Promise<Document[]> 
       });
 
       documents.push(...docs);
-      console.log(`     ✅ Loaded ${docs.length} document(s)\n`);
+      console.log(`     Loaded ${docs.length} document(s)\n`);
     } catch (error: any) {
-      console.error(`     ❌ Error: ${error.message}\n`);
+      console.error(`     Error: ${error.message}\n`);
     }
   }
 
@@ -109,8 +109,8 @@ async function loadDocumentsFromDirectory(dirPath: string): Promise<Document[]> 
 }
 
 async function ingestDocuments() {
-  console.log('🚀 Starting VYRE document ingestion...\n');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+  console.log('Starting VYRE document ingestion...\n');
+  console.log('==================================================\n');
 
   try {
     if (!process.env.PINECONE_API_KEY) {
@@ -120,13 +120,13 @@ async function ingestDocuments() {
       throw new Error('PINECONE_INDEX not set in .env');
     }
 
-    console.log('🔌 Connecting to Pinecone...');
+    console.log('Connecting to Pinecone...');
     const pinecone = new Pinecone({
       apiKey: process.env.PINECONE_API_KEY,
     });
 
     const index = pinecone.Index(process.env.PINECONE_INDEX);
-    console.log(`✅ Connected to index: ${process.env.PINECONE_INDEX}\n`);
+    console.log(`Connected to index: ${process.env.PINECONE_INDEX}\n`);
 
     // FIX: Correct path to backend/docs
     // __dirname is: backend/src
@@ -138,7 +138,7 @@ async function ingestDocuments() {
     const rawDocs = await loadDocumentsFromDirectory(docsPath);
 
     if (rawDocs.length === 0) {
-      console.log('⚠️  No documents found!');
+      console.log('No documents found!');
       console.log('\n💡 Add files to: backend/docs/');
       console.log('   Supported formats:');
       console.log('   • PDF (.pdf)');
@@ -187,7 +187,7 @@ For more info, visit vyre.africa`;
     });
 
     const chunks = await textSplitter.splitDocuments(rawDocs);
-    console.log(`✅ Created ${chunks.length} chunks\n`);
+    console.log(`Created ${chunks.length} chunks\n`);
 
     console.log('🧠 Creating embeddings (FREE HuggingFace)...');
     console.log('📥 Model: Xenova/all-MiniLM-L6-v2\n');
@@ -215,7 +215,7 @@ For more info, visit vyre.africa`;
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
     console.log('🎉 Ready! Start server: npm run dev\n');
   } catch (error: any) {
-    console.error('❌ Ingestion failed!');
+    console.error('Ingestion failed!');
     console.error('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.error('Error:', error.message);
     

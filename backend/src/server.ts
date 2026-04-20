@@ -11,10 +11,10 @@ import { initializePinecone } from './tools/index.js';
 import { config } from './config/env.js';
 import { v4 as uuidv4 } from 'uuid';
 
-// ✅ FIX: Match the exact state type expected by LangGraph
+// FIX: Match the exact state type expected by LangGraph
 interface GraphState {
   messages: BaseMessage[];
-  next: string; // ✅ Made required instead of optional
+  next: string; // Made required instead of optional
 }
 
 const app = express();
@@ -22,11 +22,11 @@ const PORT = process.env.PORT || config.server.port || 3000;
 
 app.use(express.json({ limit: '10mb' }));
 
-// ✅ Allow multiple origins for production
+// Allow multiple origins for production
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000', 
-  'https://vyre-chatbot.vercel.app',  // ⚠️ REPLACE WITH YOUR VERCEL URL
+  'https://vyre-chatbot.vercel.app',  // REPLACE WITH YOUR VERCEL URL
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
@@ -39,7 +39,7 @@ app.use(cors({
     if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
       callback(null, true);
     } else {
-      console.warn('⚠️ CORS blocked:', origin);
+      console.warn('CORS blocked:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -49,12 +49,12 @@ app.use(cors({
 }));
 
 const server = app.listen(PORT, () => {
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(`🚀 VYRE Chatbot API`);
-  console.log(`📍 http://localhost:${PORT}`);
-  console.log(`🤖 Model: ${config.groq.model}`);
-  console.log(`📚 Index: ${config.pinecone.index}`);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+  console.log('==================================================');
+  console.log(`VYRE Chatbot API`);
+  console.log(`http://localhost:${PORT}`);
+  console.log(`Model: ${config.groq.model}`);
+  console.log(`Index: ${config.pinecone.index}`);
+  console.log('==================================================\n');
 });
 
 server.timeout = 300000;
@@ -63,9 +63,9 @@ server.headersTimeout = 66000;
 
 const sessions = new Map<string, string>();
 
-console.log('🔧 Initializing services...');
+console.log('Initializing services...');
 await initializePinecone();
-console.log('✅ Pinecone & Tools initialized\n');
+console.log('Pinecone & Tools initialized\n');
 
 app.get('/health', (req, res) => {
   res.json({
@@ -88,9 +88,9 @@ app.post('/api/chat/stream', async (req, res) => {
   try {
     const { message, sessionId } = req.body;
 
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('📨 Message:', message);
-    console.log('🔑 Session:', sessionId);
+    console.log('==================================================');
+    console.log('Message:', message);
+    console.log('Session:', sessionId);
 
     if (!sessionId) {
       return res.status(400).json({ error: 'Session ID required' });
@@ -112,7 +112,7 @@ app.post('/api/chat/stream', async (req, res) => {
       timeout: 120000,
     };
 
-    console.log('🤖 Invoking LangGraph...');
+    console.log('Invoking LangGraph...');
 
     const graphPromise = langGraphApp.invoke({ messages }, configGraph);
     const timeoutPromise = new Promise((_, reject) => 
@@ -121,18 +121,18 @@ app.post('/api/chat/stream', async (req, res) => {
 
     const rawState = await Promise.race([graphPromise, timeoutPromise]);
 
-    console.log('✅ Graph execution complete');
+    console.log('Graph execution complete');
     
-    // ✅ FIX: Safely cast and provide default for 'next'
+    // FIX: Safely cast and provide default for 'next'
     const state: GraphState = {
       messages: (rawState as any).messages || [],
-      next: (rawState as any).next || 'synthesize' // ✅ Provide default
+      next: (rawState as any).next || 'synthesize' // Provide default
     };
 
-    console.log('📊 Messages in state:', state.messages?.length || 0);
+    console.log('Messages in state:', state.messages?.length || 0);
 
     if (!state.messages || state.messages.length === 0) {
-      console.error('❌ No messages in state!');
+      console.error('No messages in state!');
       res.write(`data: ${JSON.stringify({ error: 'No response generated' })}\n\n`);
       res.write('data: [DONE]\n\n');
       res.end();
@@ -144,10 +144,10 @@ app.post('/api/chat/stream', async (req, res) => {
     );
     
     if (toolMessages && toolMessages.length > 0) {
-      console.log('🛠️  Tools used:', toolMessages.length);
+      console.log('Tools used:', toolMessages.length);
     }
 
-    console.log('🔄 Starting stream...\n');
+    console.log('Starting stream...\n');
 
     let chunkCount = 0;
     let totalContent = '';
@@ -157,7 +157,7 @@ app.post('/api/chat/stream', async (req, res) => {
         res.write(': ping\n\n');
       }, 15000);
 
-      // ✅ FIX: Now state has the required 'next' property
+      // FIX: Now state has the required 'next' property
       for await (const chunk of synthesizerStreamNode(state)) {
         if (chunk && chunk.toString().trim()) {
           chunkCount++;
@@ -167,7 +167,7 @@ app.post('/api/chat/stream', async (req, res) => {
         }
         
         if (Date.now() - startTime > 180000) {
-          console.warn('⚠️  Stream timeout, breaking...');
+          console.warn('Stream timeout, breaking...');
           break;
         }
       }
@@ -175,13 +175,13 @@ app.post('/api/chat/stream', async (req, res) => {
       clearInterval(keepAliveInterval);
 
     } catch (streamError: any) {
-      console.error('❌ Stream error:', streamError.message);
+      console.error('Stream error:', streamError.message);
     }
 
-    console.log(`✅ Streamed ${chunkCount} chunks (${totalContent.length} chars)`);
+    console.log(`Streamed ${chunkCount} chunks (${totalContent.length} chars)`);
     
     if (chunkCount === 0 || totalContent.length === 0) {
-      console.warn('⚠️  No content streamed, sending fallback...');
+      console.warn('No content streamed, sending fallback...');
       const lastMsg = state.messages[state.messages.length - 1];
       
       if (lastMsg && 'content' in lastMsg) {
@@ -189,7 +189,7 @@ app.post('/api/chat/stream', async (req, res) => {
           ? lastMsg.content 
           : JSON.stringify(lastMsg.content);
         
-        console.log('📤 Sending fallback, length:', fallbackContent.length);
+        console.log('Sending fallback, length:', fallbackContent.length);
         res.write(`data: ${JSON.stringify({ content: fallbackContent })}\n\n`);
       } else {
         res.write(`data: ${JSON.stringify({ error: 'No response content available' })}\n\n`);
@@ -197,14 +197,14 @@ app.post('/api/chat/stream', async (req, res) => {
     }
 
     const duration = Date.now() - startTime;
-    console.log(`⏱️  Total duration: ${duration}ms`);
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    console.log(`Total duration: ${duration}ms`);
+    console.log('==================================================\n');
 
     res.write('data: [DONE]\n\n');
     res.end();
 
   } catch (error: any) {
-    console.error('❌ Error:', error.message);
+    console.error('Error:', error.message);
     console.error(error.stack);
     
     try {
@@ -212,7 +212,7 @@ app.post('/api/chat/stream', async (req, res) => {
       res.write('data: [DONE]\n\n');
       res.end();
     } catch (writeError) {
-      console.error('❌ Could not send error to client:', writeError);
+      console.error('Could not send error to client:', writeError);
     }
   }
 });

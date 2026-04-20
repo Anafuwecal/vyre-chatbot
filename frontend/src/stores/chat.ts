@@ -20,9 +20,9 @@ export const useChatStore = defineStore('chat', () => {
       const response = await fetch(`${API_URL}/api/session`, { method: 'POST' })
       const data = await response.json()
       sessionId.value = data.sessionId
-      console.log('✅ Session created:', sessionId.value)
+      console.log('Session created:', sessionId.value)
     } catch (error) {
-      console.error('❌ Session failed:', error)
+      console.error('Session failed:', error)
       sessionId.value = `local-${Date.now()}`
     }
   }
@@ -38,17 +38,17 @@ export const useChatStore = defineStore('chat', () => {
 
   const sendMessage = async (content: string) => {
   if (!content.trim() || isLoading.value) {
-    console.log('⚠️ Skipping send - empty or loading')
+    console.log('Skipping send - empty or loading')
     return
   }
 
   if (!sessionId.value) {
-    console.log('⚠️ No session, creating one...')
+    console.log('No session, creating one...')
     await initSession()
   }
 
-  console.log('📤 Sending message:', content)
-  console.log('🔑 Using session:', sessionId.value)
+  console.log('Sending message:', content)
+  console.log('Using session:', sessionId.value)
 
   addMessage('user', content)
   isLoading.value = true
@@ -60,7 +60,7 @@ export const useChatStore = defineStore('chat', () => {
   try {
     // Set overall timeout (3 minutes)
     timeoutId = setTimeout(() => {
-      console.warn('⏱️  Request timeout, aborting...')
+        console.warn('Request timeout, aborting...')
       abortController.abort()
     }, 180000)
 
@@ -76,7 +76,7 @@ export const useChatStore = defineStore('chat', () => {
       signal: abortController.signal,
     })
 
-    console.log('📡 Response status:', response.status)
+    console.log('Response status:', response.status)
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`)
@@ -98,7 +98,7 @@ export const useChatStore = defineStore('chat', () => {
       const readPromise = reader.read()
       const timeoutPromise = new Promise<{ done: true; value?: undefined }>((resolve) =>
         setTimeout(() => {
-          console.warn('⏱️  Read timeout')
+          console.warn('Read timeout')
           resolve({ done: true })
         }, 30000) // 30 seconds per chunk
       )
@@ -141,7 +141,7 @@ export const useChatStore = defineStore('chat', () => {
               }
               
               if (parsed.error) {
-                console.error('❌ Stream error:', parsed.error)
+                console.error('Stream error:', parsed.error)
                 throw new Error(parsed.error)
               }
             } catch (e) {
@@ -149,7 +149,7 @@ export const useChatStore = defineStore('chat', () => {
                 throw e
               }
               // Skip invalid JSON
-              console.warn('⚠️  Invalid JSON, skipping:', data.substring(0, 50))
+              console.warn('Invalid JSON, skipping:', data.substring(0, 50))
             }
           }
         }
@@ -161,10 +161,10 @@ export const useChatStore = defineStore('chat', () => {
 
     // Add complete assistant message
     if (currentStreamingMessage.value.trim()) {
-      console.log('✅ Adding assistant message, length:', currentStreamingMessage.value.length)
+      console.log('Adding assistant message, length:', currentStreamingMessage.value.length)
       addMessage('assistant', currentStreamingMessage.value)
     } else {
-      console.warn('⚠️ No content received from stream')
+      console.warn('No content received from stream')
       addMessage(
         'assistant',
         "I'm sorry, I didn't receive a complete response. Please try asking again."
@@ -173,7 +173,7 @@ export const useChatStore = defineStore('chat', () => {
 
     currentStreamingMessage.value = ''
   } catch (error: any) {
-    console.error('❌ Chat error:', error)
+    console.error('Chat error:', error)
 
     // Clear timeout if exists
     if (timeoutId) clearTimeout(timeoutId)

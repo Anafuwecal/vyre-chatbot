@@ -7,7 +7,7 @@ import { config } from '../config/env.js';
 const supervisorPrompt = ChatPromptTemplate.fromMessages([
   [
     'system',
-    `You are the VYRE AI Assistant routing system. Analyze the user's question and decide which specialist to use.
+    `You are the VYRE AI Assistant routing system called "VYRE". Analyze the user's question and decide which specialist to use.
 
 **ROUTING RULES (PRIORITY ORDER):**
 
@@ -61,7 +61,7 @@ export async function supervisorNode(state: AgentStateType) {
     decision = 'synthesize';
   }
 
-  console.log(`🧭 Supervisor decision: ${decision}`);
+  console.log(`Supervisor decision: ${decision}`);
 
   return {
     next: decision,

@@ -5,11 +5,11 @@ import * as cheerio from 'cheerio';
 
 async function scrapeWebsite(url: string): Promise<string> {
   try {
-    console.log(`🌐 Scraping: ${url}`);
+    console.log(`Scraping: ${url}`);
     
     // Only allow VYRE domains
     if (!url.includes('vyre.africa')) {
-      console.warn('⚠️ Blocked non-VYRE domain:', url);
+      console.warn('Blocked non-VYRE domain:', url);
       return '';
     }
     
@@ -40,11 +40,11 @@ async function scrapeWebsite(url: string): Promise<string> {
       content = content.substring(0, 2000);
     }
 
-    console.log(`✅ Scraped ${content.length} characters from VYRE website`);
+    console.log(`Scraped ${content.length} characters from VYRE website`);
     return content;
 
   } catch (error: any) {
-    console.error(`❌ Scraping failed:`, error.message);
+    console.error(`Scraping failed:`, error.message);
     return '';
   }
 }
@@ -57,7 +57,7 @@ export const websiteSearchTool = new DynamicStructuredTool({
     url: z.string().optional().default('https://vyre.africa').describe('Must be vyre.africa or app.vyre.africa')
   }),
   func: async ({ query, url = 'https://vyre.africa' }) => {
-    console.log(`🔍 VYRE website search: "${query}"`);
+    console.log(`VYRE website search: "${query}"`);
     
     // Force VYRE domains only
     if (!url.includes('vyre.africa')) {
