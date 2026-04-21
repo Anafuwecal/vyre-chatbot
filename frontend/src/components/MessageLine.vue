@@ -38,21 +38,21 @@ const formatContent = (text: string) => {
   <div
     v-if="message.role === 'user'"
     :class="[
-      'flex gap-3 justify-end transition-all duration-400',
+      'flex gap-2 sm:gap-3 justify-end transition-all duration-400',
       visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
     ]"
   >
-    <div class="max-w-[80%]">
-      <div class="flex items-center gap-2 mb-1 justify-end">
+    <div class="max-w-[85%] sm:max-w-[80%] md:max-w-[75%]">
+      <div class="flex items-center gap-1.5 sm:gap-2 mb-1 justify-end">
         <span class="text-xs text-gray-500">{{ formatTime(message.timestamp) }}</span>
-        <span class="text-sm font-semibold text-gray-700">You</span>
+        <span class="text-xs sm:text-sm font-semibold text-gray-700">You</span>
       </div>
-      <div class="bg-black text-white p-3 rounded-2xl rounded-tr-sm border-2 border-black">
-        <div v-html="formatContent(message.content)" class="text-sm leading-relaxed" />
+      <div class="bg-black text-white p-2.5 sm:p-3 rounded-2xl rounded-tr-sm border-2 border-black break-words">
+        <div v-html="formatContent(message.content)" class="text-xs sm:text-sm leading-relaxed" />
       </div>
     </div>
-    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-black flex items-center justify-center">
-      <User :size="16" class="text-white" />
+    <div class="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-black flex items-center justify-center">
+      <User :size="14" class="text-white sm:w-4 sm:h-4" />
     </div>
   </div>
 
@@ -60,20 +60,20 @@ const formatContent = (text: string) => {
   <div
     v-else
     :class="[
-      'flex gap-3 justify-start transition-all duration-400',
+      'flex gap-2 sm:gap-3 justify-start transition-all duration-400',
       visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
     ]"
   >
-    <div class="flex-shrink-0 w-8 h-8 rounded-full bg-[#43d8b8] border-2 border-black flex items-center justify-center">
-      <Bot :size="16" class="text-black" />
+    <div class="flex-shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-[#43d8b8] border-2 border-black flex items-center justify-center">
+      <Bot :size="14" class="text-black sm:w-4 sm:h-4" />
     </div>
-    <div class="max-w-[80%]">
-      <div class="flex items-center gap-2 mb-1">
-        <span class="text-sm font-semibold text-gray-700">Vyre</span>
+    <div class="max-w-[85%] sm:max-w-[80%] md:max-w-[75%]">
+      <div class="flex items-center gap-1.5 sm:gap-2 mb-1">
+        <span class="text-xs sm:text-sm font-semibold text-gray-700">Vyre</span>
         <span class="text-xs text-gray-500">{{ formatTime(message.timestamp) }}</span>
       </div>
-      <div class="bg-white border-2 border-black p-3 rounded-2xl rounded-tl-sm">
-        <div v-html="formatContent(message.content)" class="text-sm text-gray-800 leading-relaxed" />
+      <div class="bg-white border-2 border-black p-2.5 sm:p-3 rounded-2xl rounded-tl-sm break-words">
+        <div v-html="formatContent(message.content)" class="text-xs sm:text-sm text-gray-800 leading-relaxed" />
       </div>
       
       <div 
@@ -82,11 +82,20 @@ const formatContent = (text: string) => {
       >
         <button
           @click="emit('retry')"
-          class="text-xs text-gray-500 hover:text-[#43d8b8] underline"
+          class="text-xs text-gray-500 hover:text-[#43d8b8] underline touch-manipulation"
         >
-            Retry this response
+          Retry this response
         </button>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+/* Word breaking for long text */
+.break-words {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+</style>
