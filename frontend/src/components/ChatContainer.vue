@@ -159,7 +159,7 @@ watch(
         >
           V
         </div>
-        <h3 class="text-lg sm:text-xl text-black font-bold mb-2">Welcome to VYRE</h3>
+        <h3 class="text-lg sm:text-xl text-black font-bold mb-2">Welcome, Am Vyre</h3>
         <p class="text-gray-700 text-xs sm:text-sm mb-4 sm:mb-6 px-4">
           Ask me anything about VYRE.AFRICA! I can help with features, pricing, technical questions,
           and more.
